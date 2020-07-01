@@ -3,7 +3,7 @@ defmodule Huffman.Decoder do
 
   def decode(binary, tree, result \\ [])
 
-  def decode(<<>>, _tree, result), do: result
+  def decode(<<>>, _tree, result), do: :unicode.characters_to_binary(result)
 
   def decode(binary, tree, result) do
     {rest, value} = walk(binary, tree)
