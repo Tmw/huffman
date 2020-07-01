@@ -30,10 +30,14 @@ defmodule Huffman.Encoder do
 
   defp build_frequency_map(text) do
     text
-    |> String.graphemes()
+    |> to_bytes()
     |> Enum.reduce(%{}, fn char, acc ->
       Map.update(acc, char, 1, fn val -> val + 1 end)
     end)
+  end
+
+  def to_bytes(string) do
+    for <<byte::binary-size(1) <- string>>, do: byte
   end
 
   defp to_leafs(map) do
@@ -81,7 +85,7 @@ defmodule Huffman.Encoder do
 
   defp to_binary(text, codebook) do
     text
-    |> String.graphemes()
+    |> to_bytes()
     |> Enum.reduce(<<>>, fn char, list ->
       char_as_binary = Map.get(codebook, char)
 
