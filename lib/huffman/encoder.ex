@@ -17,15 +17,8 @@ defmodule Huffman.Encoder do
     # re-encode the same text based on the codebook
     encoded = to_binary(text, codebook)
 
-    # calculate how many bits we need to add to land
-    # on a valid binary (next multiple of 8)
-    padding = ceil(bit_size(encoded) / 8) * 8 - bit_size(encoded)
-
     # return compressed representation and codebook
-    {<<
-       encoded::bitstring,
-       0::size(padding)
-     >>, huffman_tree}
+    {:ok, encoded, huffman_tree}
   end
 
   defp build_frequency_map(text) do
@@ -94,5 +87,39 @@ defmodule Huffman.Encoder do
         char_as_binary::bitstring
       >>
     end)
+  end
+
+  def encode_huffman_tree(node)
+
+  def encode_huffman_tree(%Leaf{val: val}) do
+    <<1::size(1), val::bitstring>>
+  end
+
+  def encode_huffman_tree(%Node{left: left, right: right}) do
+    <<
+      0::size(1),
+      encode_huffman_tree(left)::bitstring,
+      encode_huffman_tree(right)::bitstring
+    >>
+  end
+
+  def decode_huffman_tree(<<1::size(1), value::binary-size(1), rest::bitstring>>) do
+    {
+      %Leaf{val: value},
+      rest
+    }
+  end
+
+  def decode_huffman_tree(<<0::size(1), rest::bitstring>>) do
+    {left, rest} = decode_huffman_tree(rest)
+    {right, rest} = decode_huffman_tree(rest)
+
+    {
+      %Node{
+        left: left,
+        right: right
+      },
+      rest
+    }
   end
 end
