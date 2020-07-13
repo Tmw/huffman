@@ -3,7 +3,7 @@ defmodule Huffman.Encoder do
 
   @spec encode(String.t()) :: {binary(), map()}
   def encode(text) do
-    huffman_tree =
+    {_total, huffman_tree} =
       text
       |> build_frequency_map()
       |> to_leafs()
@@ -35,22 +35,24 @@ defmodule Huffman.Encoder do
 
   defp to_leafs(map) do
     for {val, freq} <- map do
-      %Leaf{val: val, freq: freq}
+      {freq, %Leaf{val: val}}
     end
   end
 
   defp sort_by_frequency(nodes) do
-    Enum.sort_by(nodes, fn %{freq: freq} -> freq end)
+    Enum.sort_by(nodes, fn {freq, _} -> freq end)
   end
 
   defp build_tree([first, second | rest]) do
+    {freq_first, node_first} = first
+    {freq_second, node_second} = second
+
     node = %Node{
-      left: first,
-      right: second,
-      freq: first.freq + second.freq
+      left: node_first,
+      right: node_second
     }
 
-    build_tree(rest ++ [node])
+    build_tree(rest ++ [{freq_first + freq_second, node}])
   end
 
   defp build_tree([node]), do: node
