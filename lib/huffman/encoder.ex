@@ -1,14 +1,10 @@
 defmodule Huffman.Encoder do
-  alias Huffman.{Leaf, Node}
+  alias Huffman.{Tree, Leaf, Node}
+  import Huffman.Utils, only: [bytes: 1]
 
   @spec encode(String.t()) :: {binary(), map()}
   def encode(text) do
-    {_total, huffman_tree} =
-      text
-      |> build_frequency_map()
-      |> to_leafs()
-      |> sort_by_frequency()
-      |> build_tree()
+    huffman_tree = Tree.build(text)
 
     # generate a codebook from the Huffman tree, mapping
     # each used character to its binary path in the tree.
@@ -20,42 +16,6 @@ defmodule Huffman.Encoder do
     # return compressed representation and codebook
     {:ok, encoded, huffman_tree}
   end
-
-  defp build_frequency_map(text) do
-    text
-    |> to_bytes()
-    |> Enum.reduce(%{}, fn char, acc ->
-      Map.update(acc, char, 1, fn val -> val + 1 end)
-    end)
-  end
-
-  def to_bytes(string) do
-    for <<byte::binary-size(1) <- string>>, do: byte
-  end
-
-  defp to_leafs(map) do
-    for {val, freq} <- map do
-      {freq, %Leaf{val: val}}
-    end
-  end
-
-  defp sort_by_frequency(nodes) do
-    Enum.sort_by(nodes, fn {freq, _} -> freq end)
-  end
-
-  defp build_tree([first, second | rest]) do
-    {freq_first, node_first} = first
-    {freq_second, node_second} = second
-
-    node = %Node{
-      left: node_first,
-      right: node_second
-    }
-
-    build_tree(rest ++ [{freq_first + freq_second, node}])
-  end
-
-  defp build_tree([node]), do: node
 
   defp to_codebook(node, steps \\ [], book \\ %{})
 
@@ -80,7 +40,7 @@ defmodule Huffman.Encoder do
 
   defp to_binary(text, codebook) do
     text
-    |> to_bytes()
+    |> bytes()
     |> Enum.reduce(<<>>, fn char, list ->
       char_as_binary = Map.get(codebook, char)
 
