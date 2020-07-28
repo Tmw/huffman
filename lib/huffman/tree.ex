@@ -1,52 +1,88 @@
 defmodule Huffman.Tree do
-  alias Huffman.{Leaf, Node}
-  import Huffman.Utils, only: [bytes: 1]
+  alias Huffman.{Leaf, Node, Queue}
+  @type tree :: %Node{left: Node.child(), right: Node.child()}
 
-  def build(data) do
-    data
-    |> build_frequency_map()
-    |> to_leafs()
-    |> sort_by_frequency()
-    |> build_tree()
+  @doc """
+  build/1 takes the priority queue and transforms it into a binary tree
+  with the lowest priorities as leafs furthest from the root and more higher
+  priorities closer to the root.
+  """
+  @spec build(Queue.queue()) :: tree()
+  def build(queue) do
+    # transform items to leafs
+    queue = queue |> Queue.map(&to_leaf/1)
+
+    # start building the tree
+    build_tree(queue)
   end
 
-  # build a map with the characters (bytes) and their frequencies in the given input data.
-  defp build_frequency_map(data) do
-    data
-    |> bytes()
-    |> Enum.reduce(%{}, fn char, acc ->
-      Map.update(acc, char, 1, fn val -> val + 1 end)
-    end)
-  end
+  defp build_tree(queue) do
+    {{freq_first, value_first}, queue} = queue |> Queue.pop()
+    {{freq_second, value_second}, queue} = queue |> Queue.pop()
 
-  # from the frequency map generate leaf nodes. Each leaf
-  # node is represented as a tuple. eg: {frequency, %Node{}}
-  defp to_leafs(map) do
-    for {val, freq} <- map do
-      {freq, %Leaf{val: val}}
+    node = %Node{
+      left: value_first,
+      right: value_second
+    }
+
+    queue = queue |> Queue.push(freq_first + freq_second, node)
+
+    if Queue.length(queue) > 1 do
+      build_tree(queue)
+    else
+      {{_freq, tree}, _queue} = queue |> Queue.pop()
+      tree
     end
   end
 
-  # sort all the nodes based on the frequency in ascending order.
-  defp sort_by_frequency(nodes) do
-    Enum.sort_by(nodes, fn {freq, _} -> freq end)
+  defp to_leaf(item) do
+    %Leaf{val: item}
   end
 
-  # building the tree by taking the first two elements of the list and combine them into a left and a right node. The new element will be placed back into the list with the totalled frequency.
+  @doc """
+  serialize/1 takes the tree and outputs its binary representation
+  """
+  @spec serialize(Node.t()) :: bitstring()
+  def serialize(node)
 
-  # The exit condition is when we've reached a list with only one node in it (the root node).
+  def serialize(%Leaf{val: val}) do
+    <<1::size(1), val::bitstring>>
+  end
 
-  defp build_tree([first, second | rest]) do
-    {freq_first, node_first} = first
-    {freq_second, node_second} = second
+  def serialize(%Node{left: left, right: right}) do
+    <<
+      0::size(1),
+      serialize(left)::bitstring,
+      serialize(right)::bitstring
+    >>
+  end
+
+  @doc """
+  deserialize/1 takes the binary representation and returns a populated
+  binary tree again.
+  """
+  @spec deserialize(bitstring()) :: {Node.child(), bitstring()}
+  def deserialize(bitstring)
+
+  def deserialize(<<1::size(1), value::binary-size(1), rest::bitstring>>) do
+    {
+      %Leaf{val: value},
+      rest
+    }
+  end
+
+  def deserialize(<<0::size(1), rest::bitstring>>) do
+    {left, rest} = deserialize(rest)
+    {right, rest} = deserialize(rest)
 
     node = %Node{
-      left: node_first,
-      right: node_second
+      left: left,
+      right: right
     }
 
-    build_tree(rest ++ [{freq_first + freq_second, node}])
+    case rest do
+      "" -> node
+      _ -> {node, rest}
+    end
   end
-
-  defp build_tree([{_freq, node}]), do: node
 end
