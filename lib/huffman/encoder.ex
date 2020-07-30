@@ -14,7 +14,6 @@ defmodule Huffman.Encoder do
       |> Codebook.from_tree()
       |> Codebook.encode(text)
 
-    # return compressed representation and codebook
     {:ok, encoded, tree}
   end
 end
