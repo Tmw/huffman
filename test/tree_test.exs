@@ -32,6 +32,6 @@ defmodule TreeTest do
   end
 
   describe "#deserialize/1" do
-    assert Tree.deserialize(@bit_representation) == @sample_tree
+    assert Tree.deserialize(@bit_representation) == {:ok, @sample_tree}
   end
 end

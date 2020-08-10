@@ -1,7 +1,7 @@
 defmodule Huffman.Encoder do
-  alias Huffman.{Codebook, Tree, FrequencyMap, Queue}
+  alias Huffman.{Codebook, Tree, FrequencyMap, Packer, Queue}
 
-  @spec encode(String.t()) :: {:ok, binary(), map()}
+  @spec encode(String.t()) :: {:ok, Packer.packed_data()}
   def encode(text) do
     tree =
       text
@@ -14,6 +14,11 @@ defmodule Huffman.Encoder do
       |> Codebook.from_tree()
       |> Codebook.encode(text)
 
-    {:ok, encoded, tree}
+    packed =
+      tree
+      |> Tree.serialize()
+      |> Packer.pack(encoded)
+
+    {:ok, packed}
   end
 end

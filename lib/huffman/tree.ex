@@ -1,6 +1,7 @@
 defmodule Huffman.Tree do
   alias Huffman.{Leaf, Node, Queue}
   @type tree :: %Node{left: Node.child(), right: Node.child()}
+  @type serialized_tree() :: bitstring()
 
   @doc """
   build/1 takes the priority queue and transforms it into a binary tree
@@ -40,9 +41,9 @@ defmodule Huffman.Tree do
   end
 
   @doc """
-  serialize/1 takes the tree and outputs its binary representation
+  serialize/1 takes the tree and outputs its serialized representation
   """
-  @spec serialize(Node.t()) :: bitstring()
+  @spec serialize(Node.t()) :: serialized_tree()
   def serialize(node)
 
   def serialize(%Leaf{val: val}) do
@@ -58,31 +59,31 @@ defmodule Huffman.Tree do
   end
 
   @doc """
-  deserialize/1 takes the binary representation and returns a populated
-  binary tree again.
+  deserialize/1 takes the serialized tree and returns a populated binary tree.
   """
-  @spec deserialize(bitstring()) :: {Node.child(), bitstring()}
-  def deserialize(bitstring)
+  @spec deserialize(serialized_tree()) :: {:ok, Node.child()}
+  def deserialize(serialized_tree) do
+    with {node, _rest} <- read(serialized_tree) do
+      {:ok, node}
+    end
+  end
 
-  def deserialize(<<1::size(1), value::binary-size(1), rest::bitstring>>) do
+  defp read(<<1::size(1), value::binary-size(1), rest::bitstring>>) do
     {
       %Leaf{val: value},
       rest
     }
   end
 
-  def deserialize(<<0::size(1), rest::bitstring>>) do
-    {left, rest} = deserialize(rest)
-    {right, rest} = deserialize(rest)
+  defp read(<<0::size(1), rest::bitstring>>) do
+    {left, rest} = read(rest)
+    {right, rest} = read(rest)
 
     node = %Node{
       left: left,
       right: right
     }
 
-    case rest do
-      "" -> node
-      _ -> {node, rest}
-    end
+    {node, rest}
   end
 end

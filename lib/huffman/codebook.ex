@@ -2,6 +2,8 @@ defmodule Huffman.Codebook do
   import Huffman.Utils, only: [bytes: 1]
   alias Huffman.{Node, Leaf}
 
+  @type encoded_data() :: bitstring()
+
   @doc """
   from_tree/1 returns a map of %{binary() => bitstring()} based on the position
   in the binary tree.
@@ -15,7 +17,7 @@ defmodule Huffman.Codebook do
   encode/2 returns an encoded bitstring as a result of mapping each 8 bits in the
   input text against the codebook and writing their Huffman code instead.
   """
-  @spec encode(map(), binary()) :: bitstring()
+  @spec encode(map(), binary()) :: encoded_data()
   def encode(codebook, text) do
     text
     |> bytes()
