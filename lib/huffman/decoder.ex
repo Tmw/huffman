@@ -1,10 +1,19 @@
 defmodule Huffman.Decoder do
-  alias Huffman.{Leaf, Node}
+  alias Huffman.{Leaf, Node, Packer, Tree}
 
   @doc """
   given a bitstring and a root node of the huffman tree, decode it until the
   bitstring is empty.
   """
+  @spec decode(binary()) :: {:ok, binary()} | {:error, term()}
+  def decode(data) do
+    with {:ok, tree, data} <- Packer.unpack(data),
+         {:ok, tree} <- Tree.deserialize(tree),
+         decoded <- decode(data, tree) do
+      {:ok, decoded}
+    end
+  end
+
   @spec decode(bitstring(), Node.t()) :: binary()
   def decode(binary, tree, result \\ [])
 

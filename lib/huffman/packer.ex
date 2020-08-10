@@ -51,11 +51,10 @@ defmodule Huffman.Packer do
 
   @spec unpack(packed_data()) ::
           {:ok, Tree.serialized_tree(), Codebook.encoded_data()}
-          | {:error, reason :: term()}
+          | {:error, :invalid_binary}
   def unpack(packed_data) when is_binary(packed_data) do
-    with {:ok, tree, data} <- deconstruct_binary(packed_data),
-         {:ok, tree} <- Tree.deserialize(tree) do
-      {:ok, data, tree}
+    with {:ok, tree, data} <- deconstruct_binary(packed_data) do
+      {:ok, tree, data}
     else
       _ ->
         {:error, :invalid_binary}
@@ -68,9 +67,6 @@ defmodule Huffman.Packer do
          data_length <- bit_size(rest) - padding,
          <<data::bitstring-size(data_length), _rest::bitstring>> <- rest do
       {:ok, tree, data}
-    else
-      _ ->
-        {:error, :invalid_binary}
     end
   end
 
