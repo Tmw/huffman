@@ -4,5 +4,5 @@ defmodule Huffman do
   """
 
   defdelegate encode(text), to: Huffman.Encoder
-  defdelegate decode(text), to: Huffman.Decoder
+  defdelegate decode(data), to: Huffman.Decoder
 end
